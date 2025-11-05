@@ -1,0 +1,108 @@
+# src/main/resources/application.yml
+spring:
+  application:
+    name: coupon-service
+
+  jackson:
+    time-zone: Asia/Kolkata
+    serialization:
+      write-dates-as-timestamps: false
+
+  # --- DATASOURCE (MYSQL) ---
+  datasource:
+    url: jdbc:mysql://localhost:3306/coupon_service?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
+    username: faisal
+    password: Faisal@@549
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 3
+      idle-timeout: 30000
+      connection-timeout: 20000
+      pool-name: CouponServiceHikariCP
+
+  # --- JPA/HIBERNATE ---
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        order-inserts: true
+        order-updates: true
+        jdbc:
+          batch_size: 30
+          time_zone: Asia/Kolkata   # ✅ Hibernate uses IST internally
+
+  # --- KAFKA CLIENT ---
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+      linger-ms: 2
+      compression-type: snappy
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: coupon-service-group
+      auto-offset-reset: earliest
+      enable-auto-commit: true
+    listener:
+      ack-mode: record
+    properties:
+      max.request.size: 2097152
+
+  # --- REDIS & CACHING ---
+  redis:
+    host: localhost
+    port: 6379
+    timeout: 2000
+  cache:
+    type: redis
+  data:
+    redis:
+      repositories:
+        enabled: false
+
+# --- MANAGEMENT & TRACING ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  endpoint:
+    health:
+      show-details: always
+  tracing:
+    sampling:
+      probability: 1.0
+
+# --- SERVER CONFIGURATION ---
+server:
+  port: 8085
+  servlet:
+    context-path: /coupon-service
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+
+# --- LOGGING ---
+logging:
+  file:
+    name: logs/coupon-service.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"
+  level:
+    root: INFO
+    org.springframework.web: WARN
+    com.r360.coupon_service: DEBUG
